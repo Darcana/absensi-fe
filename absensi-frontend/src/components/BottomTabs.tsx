@@ -10,7 +10,7 @@ function BottomTabs() {
   const tabs = [
     { label: 'Attendance', path: '/dashboard/attendance', icon: '📍', adminOnly: false },
     { label: 'Employee', path: '/dashboard/employees', icon: '👥', adminOnly: true },
-    { label: 'History', path: '/dashboard/history', icon: '📋', adminOnly: false },
+    { label: 'History', path: '/dashboard/history', icon: '📋', adminOnly: true },
   ].filter(tab => !tab.adminOnly || isAdmin)
 
   return (

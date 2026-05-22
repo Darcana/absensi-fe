@@ -18,6 +18,10 @@ function Login() {
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter') handleLogin()
+}
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
@@ -35,6 +39,7 @@ function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="w-full border p-2 rounded mb-6"
         />
         <button
