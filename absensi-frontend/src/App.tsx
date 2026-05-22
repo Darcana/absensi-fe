@@ -5,12 +5,14 @@ import Attendance from './pages/Attendance'
 import EmployeeList from './pages/EmployeeList'
 import AttendanceHistory from './pages/AttendanceHistory'
 import EmployeeDetail from './pages/EmployeeDetail'
+import Register from './pages/Register'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<Navigate to="/dashboard/attendance" />} />
           <Route path="attendance" element={<Attendance />} />
