@@ -18,7 +18,9 @@ function EmployeeDetail() {
         setEmployee(data)
         setForm({ name: data.name, email: data.email, level: data.level })
       } catch (_err) {
-      } finally {
+        setError("Something went wrong")
+      } 
+      finally {
         setLoading(false)
       }
     }
@@ -62,8 +64,8 @@ const handleUpdate = async () => {
               <input
                 value={form.name}
                 onChange={e => {
-                 setForm({ ...form, name: e.target.value })
-                 setError('')
+                setForm({ ...form, name: e.target.value })
+                setError('')
                 }}
                 className="w-full border border-gray-300 p-2 rounded-lg text-sm mt-1"
               />

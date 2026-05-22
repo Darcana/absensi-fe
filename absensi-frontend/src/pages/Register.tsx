@@ -29,6 +29,9 @@ function Register() {
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h1 className="text-2xl font-bold text-center mb-6">Absensi App</h1>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+            <div className="flex justify-between items-center">
+          <button onClick={() => navigate(-1)} className="text-blue-600 text-sm hover:underline mb-4">← Back</button>
+        </div>
         <input
           type="Name"
           placeholder="Name"
