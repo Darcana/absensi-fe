@@ -1,53 +1,41 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login } from '../services/auth.service'
-import { useLocation } from 'react-router-dom'
+import { register } from '../services/employee.service'
 
-function Login() {
+function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const location = useLocation()
-  const [showPopup, setShowPopup] = useState(false)
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     try {
-      const data = await login(email, password)
-      localStorage.setItem('employee', JSON.stringify(data))
-      navigate('/dashboard')
-    } catch (_err) {
-      setError('Invalid email or password')
+      await register(name, email, password)
+      navigate('/', {
+      state: { message: 'Register succeed' }
+    })
+    } catch (err: any) {
+        setError(err.message)
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-  if (e.key === 'Enter') handleLogin()
+  if (e.key === 'Enter') handleRegister()
 }
-
-
-  useEffect(() => {
-    if (location.state?.message) {
-      setShowPopup(true)
-
-      setTimeout(() => {
-        setShowPopup(false)
-      }, 3000)
-    }
-  }, [location.state])
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div>
-      {showPopup && (
-        <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow">
-          {location.state.message}
-        </div>
-      )}
-    </div>
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h1 className="text-2xl font-bold text-center mb-6">Absensi App</h1>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        <input
+          type="Name"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full border p-2 rounded mb-4"
+        />
         <input
           type="email"
           placeholder="Email"
@@ -64,18 +52,14 @@ function Login() {
           className="w-full border p-2 rounded mb-6"
         />
         <button
-          onClick={handleLogin}
+          onClick={handleRegister}
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
-          Login
+          Register
         </button>
-         <button
-            onClick={() => navigate(`/register`)}
-            className="text-blue-600 text-sm hover:underline"
-          >Register</button>
       </div>
     </div>
   )
 }
 
-export default Login
+export default Register

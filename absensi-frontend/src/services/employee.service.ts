@@ -18,3 +18,8 @@ export const updateEmployee = async (id: number, data: any) => {
   const response = await employeeApi.patch(`/employee/${id}`, data)
   return response.data
 }
+
+export const register = async (name: string, email: string, password: string) => {
+  const response = await employeeApi.post('/employee/register', { name, email, password })
+  return response.data
+}
