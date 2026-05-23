@@ -6,6 +6,7 @@ import EmployeeList from './pages/EmployeeList'
 import AttendanceHistory from './pages/AttendanceHistory'
 import EmployeeDetail from './pages/EmployeeDetail'
 import Register from './pages/Register'
+import MyHistory from './pages/MyHistory'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="employees" element={<EmployeeList />} />
           <Route path="history" element={<AttendanceHistory />} />
           <Route path="employees/:id" element={<EmployeeDetail />} />
+          <Route path="my-history" element={<MyHistory />} />
         </Route>
       </Routes>
     </BrowserRouter>
