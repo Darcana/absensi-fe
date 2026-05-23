@@ -13,10 +13,11 @@ function Dashboard() {
 
   if (!employee) return <Navigate to="/" />
 
-  const handleLogout = () => {
-    localStorage.removeItem('employee')
-    navigate('/')
-  }
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('employee')
+  navigate('/')
+}
 
   const menuItems = [
     { label: 'Attendance', path: '/dashboard/checkin', icon: <MapPin size={18} />, adminOnly: false },

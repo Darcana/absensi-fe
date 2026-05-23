@@ -1,8 +1,4 @@
-import axios from 'axios'
-
-const employeeApi = axios.create({
-  baseURL: 'http://localhost:3001'
-})
+import { employeeApi } from './api';
 
 export const login = async (email: string, password: string) => {
   const response = await employeeApi.post('/employee/login', { email, password })

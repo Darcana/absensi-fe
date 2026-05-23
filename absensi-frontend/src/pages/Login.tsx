@@ -11,15 +11,16 @@ function Login() {
   const location = useLocation()
   const [showPopup, setShowPopup] = useState(false)
 
-  const handleLogin = async () => {
-    try {
-      const data = await login(email, password)
-      localStorage.setItem('employee', JSON.stringify(data))
-      navigate('/dashboard')
-    } catch (_err) {
-      setError('Invalid email or password')
-    }
+const handleLogin = async () => {
+  try {
+    const data = await login(email, password)
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('employee', JSON.stringify(data.employee))
+    navigate('/dashboard')
+  } catch (_err) {
+    setError('Invalid email or password')
   }
+}
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
   if (e.key === 'Enter') handleLogin()
