@@ -14,7 +14,7 @@ function EmployeeDetail() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const data = await getEmployee(Number(id))
+        const data = await getEmployee(String(id))
         setEmployee(data)
         setForm({ name: data.name, email: data.email, level: data.level })
       } catch (_err) {
@@ -29,7 +29,7 @@ function EmployeeDetail() {
 
 const handleUpdate = async () => {
   try {
-    await updateEmployee(Number(id), form)
+    await updateEmployee(String(id), form)
     setEmployee({ ...employee, ...form })
     setEditing(false)
     setError('')

@@ -9,12 +9,12 @@ export const allEmployee = async () => {
   return response.data
 }
 
-export const getEmployee = async (id: number) => {
+export const getEmployee = async (id: string) => {
   const response = await employeeApi.get(`/employee/${id}`)
   return response.data
 }
 
-export const updateEmployee = async (id: number, data: any) => {
+export const updateEmployee = async (id: string, data: any) => {
   const response = await employeeApi.patch(`/employee/${id}`, data)
   return response.data
 }

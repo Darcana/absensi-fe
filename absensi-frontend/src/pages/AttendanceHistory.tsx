@@ -78,15 +78,6 @@ for (const record of result.data) {
     return () => observer.disconnect()
   }, [loading, page, totalPages])
 
-  // reset when filter changes
-const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const empId = e.target.value
-  setSelectedEmployeeId(empId)
-  setPage(1)
-  setRecords([])
-  fetchRecords(1, true, empId)
-}
-
 const filtered = records
 
 const dropdownRef = useRef<HTMLDivElement | null>(null)
@@ -115,6 +106,18 @@ const getStatus = (record: any) => {
   }
 
   return statuses
+}
+
+const getWorkHours = (record: any) => {
+  if (!record.checkIn || !record.checkOut) return null
+
+  const checkIn = new Date(record.checkIn.timestamp)
+  const checkOut = new Date(record.checkOut.timestamp)
+  const diffMs = checkOut.getTime() - checkIn.getTime()
+  const hours = Math.floor(diffMs / (1000 * 60 * 60))
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+  return `${hours}h ${minutes}m`
 }
 
   if (initialLoad) return <div className="text-center mt-10">Loading...</div>
@@ -189,40 +192,39 @@ const getStatus = (record: any) => {
         className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 cursor-pointer hover:bg-gray-50"
         onClick={() => setSelectedRecord(record)}
       >
-        <div
-  className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 cursor-pointer hover:bg-gray-50"
-  onClick={() => setSelectedRecord(record)}
->
-  <div className="flex justify-between items-center">
-    <p className="font-medium">{record.employeeName}</p>
-    <p className="text-xs text-gray-400">{record.date}</p>
-  </div>
+        <div className="flex justify-between items-center">
+          <p className="font-medium">{record.employeeName}</p>
+          <p className="text-xs text-gray-400">{record.date}</p>
+        </div>
 
-  <div className="flex justify-between text-sm">
-    <div className="flex flex-col">
-      <span className="text-xs text-gray-400">Check In</span>
-      <span className="text-green-600 font-medium">
-        {record.checkIn ? formatDate(record.checkIn.timestamp) : '-'}
-      </span>
-    </div>
-    <div className="flex flex-col items-end">
-      <span className="text-xs text-gray-400">Check Out</span>
-      <span className="text-red-500 font-medium">
-        {record.checkOut ? formatDate(record.checkOut.timestamp) : '-'}
-      </span>
-    </div>
-  </div>
-
-  {statuses.length > 0 && (
-    <div className="flex gap-2 flex-wrap">
-      {statuses.map(status => (
-        <span key={status.label} className={`text-xs px-2 py-1 rounded-full font-medium ${status.color}`}>
-          {status.label}
-        </span>
-      ))}
-    </div>
-  )}
-</div>
+        <div className="flex justify-between text-sm">
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-400">Check In</span>
+            <span className="text-green-600 font-medium">
+              {record.checkIn ? formatDate(record.checkIn.timestamp) : '-'}
+            </span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-gray-400">Check Out</span>
+            <span className="text-red-500 font-medium">
+              {record.checkOut ? formatDate(record.checkOut.timestamp) : '-'}
+            </span>
+          </div>
+        </div>
+        {getWorkHours(record) && (
+          <div className="text-xs text-gray-500">
+            🕐 Work duration: <span className="font-medium text-gray-700">{getWorkHours(record)}</span>
+          </div>
+        )}
+        {statuses.length > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            {statuses.map(status => (
+              <span key={status.label} className={`text-xs px-2 py-1 rounded-full font-medium ${status.color}`}>
+                {status.label}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
     </div>
