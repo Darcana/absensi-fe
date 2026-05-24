@@ -5,6 +5,7 @@ const colors: Record<string, string> = {
   CHECKOUT: 'bg-red-100 text-red-600',
   Late: 'bg-yellow-100 text-yellow-600',
   Overtime: 'bg-purple-100 text-purple-600',
+  'Did not check out': 'bg-red-100 text-red-600',
 }
 
 function StatusBadge({ label }: { label: string }) {
