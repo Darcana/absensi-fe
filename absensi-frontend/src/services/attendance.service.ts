@@ -1,8 +1,4 @@
-import axios from 'axios'
-
-const attendanceApi = axios.create({
-  baseURL: 'http://localhost:3000'
-})
+import { attendanceApi } from './api';
 
 export const checkIn = async (employeeId: number, photo: File) => {
   const formData = new FormData()

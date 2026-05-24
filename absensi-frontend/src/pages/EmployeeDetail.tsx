@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getEmployee, updateEmployee } from '../services/employee.service'
+import LoadingSpinner from '../components/LoadingSpinner'
+import StatusBadge from '../components/StatusBadge'
 
 function EmployeeDetail() {
   const { id } = useParams()
@@ -14,10 +16,11 @@ function EmployeeDetail() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const data = await getEmployee(Number(id))
+        const data = await getEmployee(String(id))
         setEmployee(data)
         setForm({ name: data.name, email: data.email, level: data.level })
-      } catch (_err) {
+      } catch {
+        setError('Something went wrong')
       } finally {
         setLoading(false)
       }
@@ -25,30 +28,27 @@ function EmployeeDetail() {
     fetch()
   }, [id])
 
-const handleUpdate = async () => {
-  try {
-    await updateEmployee(Number(id), form)
-    setEmployee({ ...employee, ...form })
-    setEditing(false)
-    setError('')
-  } catch (err: any) {
-    setError(err.response?.data?.message || 'Something went wrong')
+  const handleUpdate = async () => {
+    try {
+      await updateEmployee(String(id), form)
+      setEmployee({ ...employee, ...form })
+      setEditing(false)
+      setError('')
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Something went wrong')
+    }
   }
-}
 
-  if (loading) return <div className="text-center mt-10">Loading...</div>
+  if (loading) return <LoadingSpinner />
   if (!employee) return <div className="text-center mt-10">Employee not found</div>
 
   return (
     <div className="flex flex-col items-center px-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow p-6 mt-4 flex flex-col gap-4">
-        
+
         <div className="flex justify-between items-center">
           <button onClick={() => navigate(-1)} className="text-blue-600 text-sm">← Back</button>
-          <button
-            onClick={() => setEditing(!editing)}
-            className="text-sm text-blue-600 font-medium"
-          >
+          <button onClick={() => setEditing(!editing)} className="text-sm text-blue-600 font-medium">
             {editing ? 'Cancel' : 'Edit'}
           </button>
         </div>
@@ -59,14 +59,8 @@ const handleUpdate = async () => {
           <div>
             <label className="text-xs text-gray-500">Name</label>
             {editing ? (
-              <input
-                value={form.name}
-                onChange={e => {
-                 setForm({ ...form, name: e.target.value })
-                 setError('')
-                }}
-                className="w-full border border-gray-300 p-2 rounded-lg text-sm mt-1"
-              />
+              <input value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setError('') }}
+                className="w-full border border-gray-300 p-2 rounded-lg text-sm mt-1" />
             ) : (
               <p className="font-medium">{employee.name}</p>
             )}
@@ -75,14 +69,8 @@ const handleUpdate = async () => {
           <div>
             <label className="text-xs text-gray-500">Email</label>
             {editing ? (
-              <input
-                value={form.email}
-                onChange={e => 
-                    { setForm({ ...form, email: e.target.value })
-                    setError('')
-                    }}
-                className="w-full border border-gray-300 p-2 rounded-lg text-sm mt-1"
-              />
+              <input value={form.email} onChange={e => { setForm({ ...form, email: e.target.value }); setError('') }}
+                className="w-full border border-gray-300 p-2 rounded-lg text-sm mt-1" />
             ) : (
               <p className="font-medium">{employee.email}</p>
             )}
@@ -91,35 +79,19 @@ const handleUpdate = async () => {
           <div>
             <label className="text-xs text-gray-500">Level</label>
             {editing ? (
-              <select
-                value={form.level}
-                onChange={e => 
-                    {
-                        setForm({ ...form, level: e.target.value })
-                    setError('')
-                    }}
-                className="w-full border border-gray-300 p-2 rounded-lg text-sm mt-1"
-              >
+              <select value={form.level} onChange={e => { setForm({ ...form, level: e.target.value }); setError('') }}
+                className="w-full border border-gray-300 p-2 rounded-lg text-sm mt-1">
                 <option value="EMPLOYEE">EMPLOYEE</option>
                 <option value="ADMIN_HRD">ADMIN_HRD</option>
               </select>
             ) : (
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                employee.level === 'ADMIN_HRD'
-                  ? 'bg-purple-100 text-purple-600'
-                  : 'bg-blue-100 text-blue-600'
-              }`}>
-                {employee.level}
-              </span>
+              <StatusBadge label={employee.level} />
             )}
           </div>
         </div>
 
         {editing && (
-          <button
-            onClick={handleUpdate}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700"
-          >
+          <button onClick={handleUpdate} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700">
             Save Changes
           </button>
         )}

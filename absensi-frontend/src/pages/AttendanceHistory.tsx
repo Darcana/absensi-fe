@@ -1,7 +1,13 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { allAttendance, specificAttendance } from '../services/attendance.service'
 import { allEmployee, getEmployee } from '../services/employee.service'
 import { formatDate } from '../components/DateTimeFormat'
+import LoadingSpinner from '../components/LoadingSpinner'
+import DateSeparator from '../components/DateSeparator'
+import StatusBadge from '../components/StatusBadge'
+import AttendancePhotoModal from '../components/AttendancePhotoModal'
+import EmployeeSearch from '../components/EmployeeSearch'
+import useInfiniteScroll from '../hooks/useInfiniteScroll'
 
 function AttendanceHistory() {
   const [records, setRecords] = useState<any[]>([])
@@ -11,127 +17,168 @@ function AttendanceHistory() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
   const [initialLoad, setInitialLoad] = useState(true)
-  const observerRef = useRef<HTMLDivElement | null>(null)
+  const [search, setSearch] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [selectedRecord, setSelectedRecord] = useState<any>(null)
 
-const fetchRecords = useCallback(async (pageNum: number, reset: boolean = false, empId?: string) => {
-  setLoading(true)
-  const employeeCache: Record<number, string> = {}  // cache here
-
-  try {
-    let result
-
-    if (empId) {
-      const data = await specificAttendance(Number(empId))
-      result = { data, totalPages: 1 }
-    } else {
-      result = await allAttendance(pageNum)
-    }
-
-    setTotalPages(result.totalPages ?? 1)
-
-const enriched = []
-for (const record of result.data) {
-  if (!employeeCache[record.employeeId]) {
+  const fetchRecords = useCallback(async (pageNum: number, reset = false, empId?: string) => {
+    setLoading(true)
+    const employeeCache: Record<string, string> = {}
     try {
-      const employee = await getEmployee(record.employeeId)
-      employeeCache[record.employeeId] = employee.name
-    } catch (_err) {
-      employeeCache[record.employeeId] = 'Unknown'
+      let result
+      if (empId) {
+        const data = await specificAttendance(empId)
+        result = { data, totalPages: 1 }
+      } else {
+        result = await allAttendance(pageNum)
+      }
+      setTotalPages(result.totalPages ?? 1)
+      const enriched = []
+      for (const record of result.data) {
+        if (!employeeCache[record.employeeId]) {
+          try {
+            const emp = await getEmployee(record.employeeId)
+            employeeCache[record.employeeId] = emp.name
+          } catch {
+            employeeCache[record.employeeId] = 'Unknown'
+          }
+        }
+        enriched.push({ ...record, employeeName: employeeCache[record.employeeId] })
+      }
+      setRecords(prev => reset ? enriched : [...prev, ...enriched])
+    } catch {}
+    finally {
+      setLoading(false)
+      setInitialLoad(false)
     }
-  }
-  enriched.push({ ...record, employeeName: employeeCache[record.employeeId] })
-}
+  }, [])
 
-    setRecords(prev => reset ? enriched : [...prev, ...enriched])
-  } catch (_err) {
-  } finally {
-    setLoading(false)
-    setInitialLoad(false)
-  }
-}, [])
-
-  // initial load
   useEffect(() => {
     allEmployee().then(setEmployees)
     fetchRecords(1, true)
   }, [])
 
-  // infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && !loading && page < totalPages) {
-        const nextPage = page + 1
-        setPage(nextPage)
-        fetchRecords(nextPage)
-      }
-    })
+const observerRef = useInfiniteScroll(
+  () => {
+    const nextPage = page + 1
+    setPage(nextPage)
+    fetchRecords(nextPage)
+  },
+  loading,
+  page < totalPages
+)
 
-    if (observerRef.current) observer.observe(observerRef.current)
-    return () => observer.disconnect()
-  }, [loading, page, totalPages])
+  const getWorkHours = (record: any) => {
+    if (!record.checkIn || !record.checkOut) return null
+    const diffMs = new Date(record.checkOut.timestamp).getTime() - new Date(record.checkIn.timestamp).getTime()
+    const hours = Math.floor(diffMs / (1000 * 60 * 60))
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+    return `${hours}h ${minutes}m`
+  }
 
-  // reset when filter changes
-const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const empId = e.target.value
-  setSelectedEmployeeId(empId)
-  setPage(1)
-  setRecords([])
-  fetchRecords(1, true, empId)
-}
+  const getStatuses = (record: any) => {
+    const statuses = []
+    if (record.checkIn && new Date(record.checkIn.timestamp).getHours() >= 9)
+      statuses.push('Late')
+    if (record.checkOut && new Date(record.checkOut.timestamp).getHours() >= 18)
+      statuses.push('Overtime')
+    return statuses
+  }
 
-const filtered = records
-
-  if (initialLoad) return <div className="text-center mt-10">Loading...</div>
+  if (initialLoad) return <LoadingSpinner />
 
   return (
     <div className="flex flex-col items-center px-4">
       <div className="w-full max-w-md flex flex-col gap-3 mt-4">
         <div className="text-xl font-bold">Attendance History</div>
 
-        <select
-          value={selectedEmployeeId}
-          onChange={handleFilterChange}
-          className="w-full border border-gray-300 p-2 rounded-lg text-sm"
-        >
-          <option value="">All Employees</option>
-          {employees.map(emp => (
-            <option key={emp.id} value={emp.id}>
-              {emp.name}
-            </option>
-          ))}
-        </select>
+        <EmployeeSearch
+          search={search}
+          employees={employees}
+          showDropdown={showDropdown}
+          onSearch={value => {
+            setSearch(value)
+            setShowDropdown(true)
+            if (!value) {
+              setSelectedEmployeeId('')
+              setPage(1)
+              setRecords([])
+              fetchRecords(1, true)
+            }
+          }}
+          onSelect={emp => {
+            setSearch(emp.name)
+            setSelectedEmployeeId(emp.id)
+            setShowDropdown(false)
+            setPage(1)
+            setRecords([])
+            fetchRecords(1, true, emp.id)
+          }}
+          onDropdownClose={() => setShowDropdown(false)}
+        />
 
-        {filtered.length === 0 && (
+        {records.length === 0 && (
           <div className="text-sm text-gray-500">No records found</div>
         )}
 
-        {filtered.map(record => (
-          <div key={record.id} className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
-            <div>
-              <p className="font-medium">{record.employeeName}</p>
-              <p className="text-xs text-gray-400">{formatDate(record.timestamp)}</p>
+        {records.map((record, index) => {
+          const prevRecord = records[index - 1]
+          const showSeparator = index === 0 || prevRecord.date !== record.date
+          const statuses = getStatuses(record)
+          const workHours = getWorkHours(record)
+
+          return (
+            <div key={`${record.employeeId}-${record.date}`}>
+              {showSeparator && <DateSeparator date={record.date} />}
+              <div
+                className="bg-white rounded-xl shadow p-4 flex flex-col gap-2 cursor-pointer hover:bg-gray-50"
+                onClick={() => setSelectedRecord(record)}
+              >
+                <div className="flex justify-between items-center">
+                  <p className="font-medium">{record.employeeName}</p>
+                  <p className="text-xs text-gray-400">{record.date}</p>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-400">Check In</span>
+                    <span className="text-green-600 font-medium">
+                      {record.checkIn ? formatDate(record.checkIn.timestamp) : '-'}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs text-gray-400">Check Out</span>
+                    <span className="text-red-500 font-medium">
+                      {record.checkOut ? formatDate(record.checkOut.timestamp) : '-'}
+                    </span>
+                  </div>
+                </div>
+                {workHours && (
+                  <p className="text-xs text-gray-500">🕐 Work duration: <span className="font-medium text-gray-700">{workHours}</span></p>
+                )}
+                {statuses.length > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {statuses.map(s => <StatusBadge key={s} label={s} />)}
+                  </div>
+                )}
+              </div>
             </div>
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-              record.type === 'CHECKIN'
-                ? 'bg-green-100 text-green-600'
-                : 'bg-red-100 text-red-600'
-            }`}>
-              {record.type}
-            </span>
-          </div>
-        ))}
+          )
+        })}
 
-        {/* this invisible div triggers loading when scrolled into view */}
         <div ref={observerRef} className="h-4" />
-
-        {loading && (
-          <div className="text-center text-sm text-gray-400 py-2">Loading more...</div>
-        )}
-
+        {loading && <div className="text-center text-sm text-gray-400 py-2">Loading more...</div>}
         {page >= totalPages && records.length > 0 && (
           <div className="text-center text-sm text-gray-400 py-2">No more records</div>
         )}
       </div>
+
+      {selectedRecord && (
+        <AttendancePhotoModal
+          record={selectedRecord}
+          onClose={() => setSelectedRecord(null)}
+          showEmployeeName
+        />
+      )}
     </div>
   )
 }
