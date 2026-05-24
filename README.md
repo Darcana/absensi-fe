@@ -10,6 +10,7 @@
 5. Employee Attendance History ( ADMIN ONLY )
 6. Employee Data ( ADMIN ONLY )
 7. Editable Employee Data ( ADMIN ONLY )
+8. Burger side drawer bar
 
 <b>Noteworthy Feature :</b>
 1. You can do Checkin, only if your last status is checkout or none.
