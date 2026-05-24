@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { allAttendance, specificAttendance } from '../services/attendance.service'
+import { allAttendance, specificAttendanceFiltered } from '../services/attendance.service'
 import { allEmployee, getEmployee } from '../services/employee.service'
 import { formatDate } from '../components/DateTimeFormat'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -22,36 +22,36 @@ function AttendanceHistory() {
   const [selectedRecord, setSelectedRecord] = useState<any>(null)
 
   const fetchRecords = useCallback(async (pageNum: number, reset = false, empId?: string) => {
-    setLoading(true)
-    const employeeCache: Record<string, string> = {}
-    try {
-      let result
-      if (empId) {
-        const data = await specificAttendance(empId)
-        result = { data, totalPages: 1 }
-      } else {
-        result = await allAttendance(pageNum)
-      }
-      setTotalPages(result.totalPages ?? 1)
-      const enriched = []
-      for (const record of result.data) {
-        if (!employeeCache[record.employeeId]) {
-          try {
-            const emp = await getEmployee(record.employeeId)
-            employeeCache[record.employeeId] = emp.name
-          } catch {
-            employeeCache[record.employeeId] = 'Unknown'
-          }
-        }
-        enriched.push({ ...record, employeeName: employeeCache[record.employeeId] })
-      }
-      setRecords(prev => reset ? enriched : [...prev, ...enriched])
-    } catch {}
-    finally {
-      setLoading(false)
-      setInitialLoad(false)
+  setLoading(true)
+  const employeeCache: Record<string, string> = {}
+  try {
+    let result
+    if (empId) {
+      const data = await specificAttendanceFiltered(empId, pageNum)
+      result = data
+    } else {
+      result = await allAttendance(pageNum)
     }
-  }, [])
+    setTotalPages(result.totalPages ?? 1)
+    const enriched = []
+    for (const record of result.data) {
+      if (!employeeCache[record.employeeId]) {
+        try {
+          const emp = await getEmployee(record.employeeId)
+          employeeCache[record.employeeId] = emp.name
+        } catch {
+          employeeCache[record.employeeId] = 'Unknown'
+        }
+      }
+      enriched.push({ ...record, employeeName: employeeCache[record.employeeId] })
+    }
+    setRecords(enriched)  // ← always replace, never append for now
+  } catch {}
+  finally {
+    setLoading(false)
+    setInitialLoad(false)
+  }
+}, [])
 
   useEffect(() => {
     allEmployee().then(setEmployees)
@@ -82,6 +82,8 @@ const observerRef = useInfiniteScroll(
       statuses.push('Late')
     if (record.checkOut && new Date(record.checkOut.timestamp).getHours() >= 18)
       statuses.push('Overtime')
+    if (!record.checkOut)
+      statuses.push('Did not checked out')
     return statuses
   }
 

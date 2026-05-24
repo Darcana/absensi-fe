@@ -55,3 +55,4 @@ npm run build
 - Image uploads use multipart/form-data
 - Late = check in after 9 AM
 - Overtime = check out after 6 PM
+- Did not checked out = not checked out on that day
