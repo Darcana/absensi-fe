@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { allEmployee } from '../services/employee.service'
+import LoadingSpinner from '../components/LoadingSpinner'
+import StatusBadge from '../components/StatusBadge'
 
 function EmployeeList() {
   const [employees, setEmployees] = useState<any[]>([])
@@ -12,16 +14,13 @@ function EmployeeList() {
       try {
         const data = await allEmployee()
         setEmployees(data)
-      } catch (_err) {
-        // handle error
-      } finally {
-        setLoading(false)
-      }
+      } catch {}
+      finally { setLoading(false) }
     }
     fetch()
   }, [])
 
-  if (loading) return <div className="text-center mt-10">Loading...</div>
+  if (loading) return <LoadingSpinner />
 
   return (
     <div className="flex flex-col items-center px-4">
@@ -37,13 +36,7 @@ function EmployeeList() {
               <p className="font-bold">{emp.name}</p>
               <p className="text-sm text-gray-500">{emp.email}</p>
             </div>
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-              emp.level === 'ADMIN_HRD' 
-                ? 'bg-purple-100 text-purple-600' 
-                : 'bg-blue-100 text-blue-600'
-            }`}>
-              {emp.level}
-            </span>
+            <StatusBadge label={emp.level} />
           </div>
         ))}
       </div>

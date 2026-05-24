@@ -43,7 +43,7 @@ npm run build
 ## Routes
 - `/` — Login
 - `/dashboard` — Dashboard wrapper with drawer navigation
-- `/dashboard/checkin` — Check in / out (all users)
+- `/dashboard/attendance` — Check in / out (all users)
 - `/dashboard/my-history` — Personal attendance history (all users)
 - `/dashboard/employees` — Employee list (ADMIN_HRD only)
 - `/dashboard/employees/:id` — Employee detail (ADMIN_HRD only)

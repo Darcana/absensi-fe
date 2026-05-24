@@ -20,7 +20,7 @@ const handleLogout = () => {
 }
 
   const menuItems = [
-    { label: 'Attendance', path: '/dashboard/checkin', icon: <MapPin size={18} />, adminOnly: false },
+    { label: 'Attendance', path: '/dashboard/attendance', icon: <MapPin size={18} />, adminOnly: false },
     { label: 'Employee', path: '/dashboard/employees', icon: <Users size={18} />, adminOnly: true },
     { label: 'My History', path: '/dashboard/my-history', icon: <Clock size={18} />, adminOnly: false },
     { label: 'History', path: '/dashboard/history', icon: <ClipboardList size={18} />, adminOnly: true },
@@ -97,7 +97,6 @@ const handleLogout = () => {
         <div className="w-6" />
       </div>
 
-      {/* page content */}
       <div className="p-4">
         <Outlet />
       </div>
